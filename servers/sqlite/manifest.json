@@ -10,7 +10,8 @@
     "author": "Anthropic / Model Context Protocol Contributors",
     "original_language": "Python",
     "license": "MIT",
-    "pinned_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
+    "pinned_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f",
+    "install": { "command": "uvx", "args": ["mcp-server-sqlite", "--db-path", "/tmp/scorp-sqlite-demo.db"] }
   },
   "port": {
     "author": "Wahyu",

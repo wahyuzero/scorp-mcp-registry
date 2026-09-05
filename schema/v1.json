@@ -50,7 +50,17 @@
           "pattern": "^[0-9a-f]{7,40}$",
           "description": "Exact upstream Git commit this port was verified against"
         },
-        "pinned_version": { "type": "string" }
+        "pinned_version": { "type": "string" },
+        "install": {
+          "type": "object",
+          "description": "How to run the original runtime (Tri-Option Option 3 and transpiler probe source)",
+          "additionalProperties": false,
+          "required": ["command"],
+          "properties": {
+            "command": { "type": "string", "examples": ["npx", "uvx", "bunx", "python3"] },
+            "args": { "type": "array", "items": { "type": "string" } }
+          }
+        }
       }
     },
     "port": {
