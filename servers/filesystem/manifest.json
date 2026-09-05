@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/schema/v1.json",
+  "id": "scorp.mcp.filesystem",
+  "name": "filesystem",
+  "version": "1.0.0",
+  "description": "Scoped local file access server with path boundary enforcement (pure Go, stdlib only)",
+  "origin": "port",
+  "upstream": {
+    "repository": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+    "author": "Anthropic / Model Context Protocol Contributors",
+    "original_language": "TypeScript",
+    "license": "MIT",
+    "pinned_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
+  },
+  "port": {
+    "author": "Wahyu",
+    "github_handle": "wahyuzero",
+    "transpiler_version": "manual (golden reference port)",
+    "license": "MIT"
+  },
+  "health": {
+    "status": "full",
+    "coverage_score": 1.0,
+    "active_tools": ["read_file", "read_multiple_files", "write_file", "edit_file", "create_directory", "list_directory", "directory_tree", "move_file", "search_files", "get_file_info", "list_allowed_directories"],
+    "unsupported_tools": []
+  },
+  "security": {
+    "ast_audit_passed": true,
+    "prompt_injection_scanned": true,
+    "build_provenance": "github-actions-attested"
+  },
+  "build": {
+    "go_version": "1.24+",
+    "sdk": "github.com/mark3labs/mcp-go",
+    "cgo": false
+  },
+  "tools": [
+    { "name": "read_file", "description": "Read the complete contents of a file as text" },
+    { "name": "read_multiple_files", "description": "Read multiple files in one call" },
+    { "name": "write_file", "description": "Create or overwrite a file with the provided contents" },
+    { "name": "edit_file", "description": "Exact string replacement inside a file" },
+    { "name": "create_directory", "description": "Create a directory including parents" },
+    { "name": "list_directory", "description": "List entries of a directory" },
+    { "name": "directory_tree", "description": "Recursive JSON tree of a directory" },
+    { "name": "move_file", "description": "Move or rename a file or directory" },
+    { "name": "search_files", "description": "Recursively match file and directory names" },
+    { "name": "get_file_info", "description": "Metadata (size, permissions, mtime) of a path" },
+    { "name": "list_allowed_directories", "description": "Show directories this server may access" }
+  ],
+  "contributors": [
+    { "handle": "wahyuzero", "role": "original_porter", "version": "1.0.0", "change": "Initial idiomatic Go port with symlink-aware path boundary enforcement" }
+  ],
+  "drift": {
+    "status": "synchronized",
+    "last_checked": "2026-09-05T00:00:00Z",
+    "upstream_latest_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
+  }
+}

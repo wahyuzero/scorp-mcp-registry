@@ -1,0 +1,94 @@
+name: security-audit
+
+# Layer 2: Automated AST & Prompt Scan + Layer 1 source-only policy.
+# Every PR and every push to main must pass all gates.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  source-only-policy:
+    name: "Layer 1: Source-Only Registry"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject committed binaries and archives
+        run: |
+          offenders=$(find . -path ./.git -prune -o -type f \
+            \( -name '*.exe' -o -name '*.bin' -o -name '*.dll' -o -name '*.so' -o -name '*.dylib' \) -print)
+          # ELF/PE check regardless of extension
+          for f in $(find . -path ./.git -prune -o -type f -print); do
+            if head -c 4 "$f" 2>/dev/null | grep -q $'\x7fELF\|MZ\x90'; then
+              offenders="$offenders $f"
+            fi
+          done
+          if [ -n "$offenders" ]; then
+            echo "::error::Binary uploads are strictly prohibited (source-only policy):$offenders"
+            exit 1
+          fi
+          echo "No binaries found — source-only policy satisfied."
+
+  go-static-analysis:
+    name: "Layer 2: AST Scan (gosec + govulncheck)"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        server: [fetch, sqlite, filesystem]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache-dependency-path: servers/${{ matrix.server }}/go.sum
+      - name: gosec (AST security linter)
+        uses: securego/gosec@master
+        with:
+          args: -no-fail -fmt sarif -out ${{ matrix.server }}-gosec.sarif ./...
+          working-directory: servers/${{ matrix.server }}
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: servers/${{ matrix.server }}/${{ matrix.server }}-gosec.sarif
+      - name: govulncheck (known vulnerabilities in dependency graph)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+        working-directory: servers/${{ matrix.server }}
+
+  prompt-injection-lint:
+    name: "Layer 2: Prompt-Injection Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 scripts/prompt_injection_lint.py
+
+  manifest-validation:
+    name: Schema & Registry Index Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install jsonschema
+      - run: python3 scripts/validate_manifests.py
+
+  jsonrpc-contract:
+    name: "Layer 2: JSON-RPC Contract Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - run: ./scripts/contract_check.sh

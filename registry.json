@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-09-05T00:00:00Z",
+  "description": "Scorp MCP Marketplace — aggregated index of native Go MCP servers. Source-only policy: binaries are never committed; artifacts are built by GitHub Actions (release-binaries.yml).",
+  "servers": [
+    {
+      "id": "scorp.mcp.fetch",
+      "name": "fetch",
+      "version": "1.1.0",
+      "description": "High-performance web scraping and markdown extraction server (pure Go, single static binary)",
+      "origin": "port",
+      "source_dir": "servers/fetch",
+      "health": "full",
+      "tools": ["fetch"],
+      "drift": "synchronized",
+      "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/servers/fetch/manifest.json",
+      "artifacts": {}
+    },
+    {
+      "id": "scorp.mcp.sqlite",
+      "name": "sqlite",
+      "version": "1.0.0",
+      "description": "Local SQLite database inspection and query server (pure Go, CGO-free driver)",
+      "origin": "port",
+      "source_dir": "servers/sqlite",
+      "health": "full",
+      "tools": ["read_query", "write_query", "create_table", "list_tables", "describe_table"],
+      "drift": "synchronized",
+      "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/servers/sqlite/manifest.json",
+      "artifacts": {}
+    },
+    {
+      "id": "scorp.mcp.filesystem",
+      "name": "filesystem",
+      "version": "1.0.0",
+      "description": "Scoped local file access server with path boundary enforcement (pure Go, stdlib only)",
+      "origin": "port",
+      "source_dir": "servers/filesystem",
+      "health": "full",
+      "tools": ["read_file", "read_multiple_files", "write_file", "edit_file", "create_directory", "list_directory", "directory_tree", "move_file", "search_files", "get_file_info", "list_allowed_directories"],
+      "drift": "synchronized",
+      "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/servers/filesystem/manifest.json",
+      "artifacts": {}
+    }
+  ]
+}

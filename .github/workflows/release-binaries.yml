@@ -1,0 +1,93 @@
+name: release-binaries
+
+# Layer 3: Hermetic, reproducible CI builds. Official artifacts are compiled
+# ONLY here — contributors never upload binaries (source-only policy).
+# Triggers on version tags: fetch-v1.1.0, sqlite-v1.0.0, filesystem-v1.0.0.
+
+on:
+  push:
+    tags: ["*-v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      server:
+        description: "Server to build (fetch | sqlite | filesystem | all)"
+        required: true
+        default: "all"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Cross-compile ${{ matrix.server }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        server:
+          - fetch
+          - sqlite
+          - filesystem
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "version=${GITHUB_REF_NAME#*-v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache-dependency-path: servers/${{ matrix.server }}/go.sum
+
+      - name: Cross-compile (CGO_ENABLED=0, static)
+        working-directory: servers/${{ matrix.server }}
+        run: |
+          mkdir -p ../../dist
+          for target in linux/amd64 linux/arm64 darwin/arm64 windows/amd64; do
+            GOOS=${target%/*} GOARCH=${target#*/} CGO_ENABLED=0 \
+              go build -trimpath -ldflags "-s -w" -o \
+              "../../dist/${{ matrix.server }}-${GOOS}-${GOARCH}${exe_ext}" .
+          done
+        env:
+          exe_ext: ""
+      - name: Fix Windows extension
+        run: mv dist/${{ matrix.server }}-windows-amd64 dist/${{ matrix.server }}-windows-amd64.exe 2>/dev/null || true
+
+      - name: Generate SHA-256 checksums
+        working-directory: dist
+        run: |
+          sha256sum ${{ matrix.server }}-* > checksums-${{ matrix.server }}.txt
+          cat checksums-${{ matrix.server }}.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.server }}-v${{ steps.ver.outputs.version }}
+          path: |
+            dist/${{ matrix.server }}-*
+            dist/checksums-${{ matrix.server }}.txt
+
+  release:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+
+      - name: Publish GitHub Release with checksums
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            Official Scorp Marketplace build (Layer 3 hermetic CI).
+            Verify before execution: `sha256sum -c checksums-*.txt`
+            Client-side SHA-256 pinning is enforced by scorp-agent at install time (Layer 4).

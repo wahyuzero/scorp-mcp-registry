@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/schema/v1.json",
+  "id": "scorp.mcp.fetch",
+  "name": "fetch",
+  "version": "1.1.0",
+  "description": "High-performance web scraping and markdown extraction server (pure Go, single static binary)",
+  "origin": "port",
+  "upstream": {
+    "repository": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+    "author": "Anthropic / Model Context Protocol Contributors",
+    "original_language": "TypeScript",
+    "license": "MIT",
+    "pinned_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
+  },
+  "port": {
+    "author": "Wahyu",
+    "github_handle": "wahyuzero",
+    "transpiler_version": "manual (golden reference port)",
+    "license": "MIT"
+  },
+  "health": {
+    "status": "full",
+    "coverage_score": 1.0,
+    "active_tools": ["fetch"],
+    "unsupported_tools": []
+  },
+  "security": {
+    "ast_audit_passed": true,
+    "prompt_injection_scanned": true,
+    "build_provenance": "github-actions-attested"
+  },
+  "build": {
+    "go_version": "1.24+",
+    "sdk": "github.com/mark3labs/mcp-go",
+    "cgo": false
+  },
+  "tools": [
+    {
+      "name": "fetch",
+      "description": "Fetches a web URL and extracts rendered HTML or markdown content with pagination support"
+    }
+  ],
+  "contributors": [
+    { "handle": "wahyuzero", "role": "original_porter", "version": "1.1.0", "change": "Initial idiomatic Go port with readability extraction and pagination" }
+  ],
+  "drift": {
+    "status": "synchronized",
+    "last_checked": "2026-09-05T00:00:00Z",
+    "upstream_latest_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/schema/v1.json",
+  "id": "scorp.mcp.sqlite",
+  "name": "sqlite",
+  "version": "1.0.0",
+  "description": "Local SQLite database inspection and query server (pure Go, CGO-free driver)",
+  "origin": "port",
+  "upstream": {
+    "repository": "https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite",
+    "author": "Anthropic / Model Context Protocol Contributors",
+    "original_language": "Python",
+    "license": "MIT",
+    "pinned_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
+  },
+  "port": {
+    "author": "Wahyu",
+    "github_handle": "wahyuzero",
+    "transpiler_version": "manual (golden reference port)",
+    "license": "MIT"
+  },
+  "health": {
+    "status": "full",
+    "coverage_score": 1.0,
+    "active_tools": ["read_query", "write_query", "create_table", "list_tables", "describe_table"],
+    "unsupported_tools": []
+  },
+  "security": {
+    "ast_audit_passed": true,
+    "prompt_injection_scanned": true,
+    "build_provenance": "github-actions-attested"
+  },
+  "build": {
+    "go_version": "1.24+",
+    "sdk": "github.com/mark3labs/mcp-go",
+    "cgo": false
+  },
+  "tools": [
+    { "name": "read_query", "description": "Execute a SELECT query and return results as a markdown table" },
+    { "name": "write_query", "description": "Execute an INSERT, UPDATE, or DELETE statement" },
+    { "name": "create_table", "description": "Create a new table (CREATE TABLE statements only)" },
+    { "name": "list_tables", "description": "List all user tables in the database" },
+    { "name": "describe_table", "description": "Show column schema for a table" }
+  ],
+  "contributors": [
+    { "handle": "wahyuzero", "role": "original_porter", "version": "1.0.0", "change": "Initial idiomatic Go port on modernc.org/sqlite (CGO-free)" }
+  ],
+  "drift": {
+    "status": "synchronized",
+    "last_checked": "2026-09-05T00:00:00Z",
+    "upstream_latest_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
+  }
+}

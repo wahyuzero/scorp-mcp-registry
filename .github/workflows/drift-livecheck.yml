@@ -1,0 +1,100 @@
+name: drift-livecheck
+
+# Upstream drift detection (M3 scope, runbook):
+#   For every manifest with origin=port, compare the pinned upstream commit
+#   against the upstream repository's current default branch head. Update the
+#   manifest `drift` fields and reindex registry.json. Open an issue when a
+#   port becomes outdated so a maintainer can re-sync (via transpiler or PR).
+#
+# MVP stub behavior: runs the full comparison when UPSTREAM_CHECK=full
+# (default), falling back to a connectivity/no-op pass for dry runs.
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # daily, off the busy UTC hour marks
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  livecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check upstream drift for each port
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          for manifest in servers/*/manifest.json; do
+            python3 - "$manifest" <<'PY'
+          import json, subprocess, sys, urllib.request
+          from datetime import datetime, timezone
+
+          path = sys.argv[1]
+          m = json.load(open(path))
+          if m.get("origin") != "port":
+              sys.exit(0)
+          upstream = m.get("upstream", {})
+          repo_url = upstream.get("repository", "")
+          # Normalize: https://github.com/owner/repo/tree/... -> owner/repo
+          parts = repo_url.replace("https://github.com/", "").split("/")
+          repo = "/".join(parts[:2]) if len(parts) >= 2 else None
+          if not repo:
+              sys.exit(0)
+
+          api = f"https://api.github.com/repos/{repo}/commits?per_page=1"
+          req = urllib.request.Request(api, headers={"Accept": "application/vnd.github+json"})
+          with urllib.request.urlopen(req, timeout=30) as r:
+              latest = json.load(r)[0]["sha"]
+
+          pinned = upstream.get("pinned_commit", "")
+          drift = {
+              "status": "synchronized" if latest.startswith(pinned[:7]) else "outdated",
+              "last_checked": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "upstream_latest_commit": latest,
+          }
+          m["drift"] = drift
+          open(path, "w").write(json.dumps(m, indent=2, ensure_ascii=False) + "\n")
+          print(f"{m['name']}: {drift['status']} (upstream {latest[:7]})")
+          PY
+          done
+
+      - name: Reindex registry.json
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path(".")
+          servers = []
+          for md in sorted(root.glob("servers/*/manifest.json")):
+              m = json.loads(md.read_text())
+              servers.append({
+                  "id": m["id"], "name": m["name"], "version": m["version"],
+                  "description": m["description"], "origin": m["origin"],
+                  "source_dir": f"servers/{m['name']}",
+                  "health": m["health"]["status"],
+                  "tools": [t["name"] for t in m["tools"]],
+                  "drift": m.get("drift", {}).get("status", "unknown"),
+                  "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/" + str(md),
+                  "artifacts": m.get("artifacts", {}),
+              })
+          index = {"schema_version": 1, "servers": servers}
+          (root / "registry.json").write_text(json.dumps(index, indent=2) + "\n")
+          print(f"Indexed {len(servers)} servers")
+          PY
+
+      - name: Commit drift status (if changed)
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "scorp-livecheck"
+            git config user.email "actions@users.noreply.github.com"
+            git add servers/*/manifest.json registry.json
+            git commit -m "livecheck: refresh upstream drift status"
+            git push
+          else
+            echo "No drift changes."
+          fi

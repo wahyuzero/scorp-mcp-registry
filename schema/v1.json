@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/schema/v1.json",
+  "title": "Scorp MCP Manifest (scorp-mcp.json) v1",
+  "description": "Attribution, health, security and artifact metadata for a Scorp Marketplace MCP server entry.",
+  "type": "object",
+  "required": ["$schema", "id", "name", "version", "description", "origin", "health", "build", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/schema/v1.json"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^scorp\\.mcp\\.[a-z0-9][a-z0-9-_]*$",
+      "description": "Globally unique reverse-DNS style identifier, e.g. scorp.mcp.fetch"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-_]*$",
+      "description": "Short install target name used by /mcp install <target>"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of this Go port / native server"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "origin": {
+      "type": "string",
+      "enum": ["port", "native"],
+      "description": "port = rebuilt from an upstream Node/Python server; native = original Go creation"
+    },
+    "upstream": {
+      "type": "object",
+      "description": "Required when origin=port; ignored for native",
+      "additionalProperties": false,
+      "required": ["repository", "author", "original_language", "license"],
+      "properties": {
+        "repository": { "type": "string", "format": "uri" },
+        "author": { "type": "string" },
+        "original_language": { "type": "string", "examples": ["TypeScript", "Python"] },
+        "license": { "type": "string" },
+        "pinned_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$",
+          "description": "Exact upstream Git commit this port was verified against"
+        },
+        "pinned_version": { "type": "string" }
+      }
+    },
+    "port": {
+      "type": "object",
+      "description": "Attribution for the Go port. Required when origin=port.",
+      "additionalProperties": false,
+      "properties": {
+        "author": { "type": "string" },
+        "github_handle": { "type": "string", "pattern": "^[A-Za-z0-9-]{1,39}$" },
+        "transpiler_version": { "type": "string" },
+        "port_repository": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional: separate repository holding the port source. Canonical MVP layout keeps source in this registry under servers/<name>/main.go"
+        },
+        "license": { "type": "string" }
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "coverage_score", "active_tools"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["full", "partial"],
+          "description": "full = every upstream tool is active; partial = some tools unsupported"
+        },
+        "coverage_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "active_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "unsupported_tools": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "unsupported_reason": {
+          "type": "string",
+          "description": "Required when status=partial"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "partial" } } },
+          "then": { "required": ["status", "coverage_score", "active_tools", "unsupported_tools", "unsupported_reason"] }
+        }
+      ]
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ast_audit_passed": { "type": "boolean" },
+        "prompt_injection_scanned": { "type": "boolean" },
+        "build_provenance": {
+          "type": "string",
+          "description": "e.g. github-actions-attested (CI), local (hand built)"
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["go_version", "sdk"],
+      "properties": {
+        "go_version": { "type": "string" },
+        "sdk": { "type": "string", "description": "e.g. github.com/mark3labs/mcp-go" },
+        "cgo": { "type": "boolean", "default": false }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "description": "Declared when this entry is a flavor/variant of a canonical port",
+      "additionalProperties": false,
+      "required": ["is_flavor", "canonical_base", "flavor_name"],
+      "properties": {
+        "is_flavor": { "type": "boolean" },
+        "canonical_base": { "type": "string" },
+        "flavor_name": { "type": "string" },
+        "custom_features": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Prebuilt per-architecture release artifacts (Option 1 of the Tri-Option install)",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9]+_[a-z0-9]+$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["url", "sha256"],
+          "properties": {
+            "url": { "type": "string", "format": "uri" },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "description"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+    "contributors": {
+      "type": "array",
+      "description": "Attribution changelog for collaborative maintenance",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["handle", "role", "version"],
+        "properties": {
+          "handle": { "type": "string" },
+          "role": {
+            "type": "string",
+            "enum": ["original_porter", "maintainer", "contributor", "author"]
+          },
+          "version": { "type": "string" },
+          "change": { "type": "string" }
+        }
+      }
+    },
+    "drift": {
+      "type": "object",
+      "description": "Upstream drift status, maintained automatically by drift-livecheck.yml (native origin entries omit this)",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["synchronized", "outdated", "unknown"]
+        },
+        "last_checked": { "type": "string", "format": "date-time" },
+        "upstream_latest_commit": { "type": "string" },
+        "upstream_latest_version": { "type": "string" }
+      }
+    }
+  }
+}
