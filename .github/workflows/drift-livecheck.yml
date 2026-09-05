@@ -72,7 +72,7 @@ jobs:
           servers = []
           for md in sorted(root.glob("servers/*/manifest.json")):
               m = json.loads(md.read_text())
-              servers.append({
+              entry = {
                   "id": m["id"], "name": m["name"], "version": m["version"],
                   "description": m["description"], "origin": m["origin"],
                   "source_dir": f"servers/{m['name']}",
@@ -81,7 +81,10 @@ jobs:
                   "drift": m.get("drift", {}).get("status", "unknown"),
                   "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/" + str(md),
                   "artifacts": m.get("artifacts", {}),
-              })
+              }
+              if m.get("variant"):
+                  entry["variant"] = m["variant"]
+              servers.append(entry)
           index = {"schema_version": 1, "servers": servers}
           (root / "registry.json").write_text(json.dumps(index, indent=2) + "\n")
           print(f"Indexed {len(servers)} servers")

@@ -64,6 +64,15 @@ jobs:
           sha256sum ${{ matrix.server }}-* > checksums-${{ matrix.server }}.txt
           cat checksums-${{ matrix.server }}.txt
 
+      # M3 (optional, requires COSIGN_KEY secret + cosign installed):
+      # Key management is deliberately deferred; SHA-256 pinning is the MVP
+      # Layer 4 guarantee. Enable signing by uncommenting:
+      # - name: Sign artifacts with Cosign
+      #   uses: sigstore/cosign-installer@v3
+      # - run: cosign sign-blob --key env://COSIGN_KEY --yes dist/${{ matrix.server }}-*
+      #   env:
+      #     COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

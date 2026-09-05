@@ -63,6 +63,8 @@ def main() -> int:
                 "artifacts": manifest.get("artifacts", {}),
             }
         )
+        if manifest.get("variant"):
+            entries[-1]["variant"] = manifest["variant"]
 
     if REGISTRY.exists():
         registry = load(REGISTRY)
