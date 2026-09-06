@@ -11,7 +11,14 @@
     "original_language": "Python",
     "license": "MIT",
     "pinned_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f",
-    "install": { "command": "uvx", "args": ["mcp-server-sqlite", "--db-path", "/tmp/scorp-sqlite-demo.db"] }
+    "install": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "/tmp/scorp-sqlite-demo.db"
+      ]
+    }
   },
   "port": {
     "author": "Wahyu",
@@ -22,7 +29,13 @@
   "health": {
     "status": "full",
     "coverage_score": 1.0,
-    "active_tools": ["read_query", "write_query", "create_table", "list_tables", "describe_table"],
+    "active_tools": [
+      "read_query",
+      "write_query",
+      "create_table",
+      "list_tables",
+      "describe_table"
+    ],
     "unsupported_tools": []
   },
   "security": {
@@ -36,18 +49,38 @@
     "cgo": false
   },
   "tools": [
-    { "name": "read_query", "description": "Execute a SELECT query and return results as a markdown table" },
-    { "name": "write_query", "description": "Execute an INSERT, UPDATE, or DELETE statement" },
-    { "name": "create_table", "description": "Create a new table (CREATE TABLE statements only)" },
-    { "name": "list_tables", "description": "List all user tables in the database" },
-    { "name": "describe_table", "description": "Show column schema for a table" }
+    {
+      "name": "read_query",
+      "description": "Execute a SELECT query and return results as a markdown table"
+    },
+    {
+      "name": "write_query",
+      "description": "Execute an INSERT, UPDATE, or DELETE statement"
+    },
+    {
+      "name": "create_table",
+      "description": "Create a new table (CREATE TABLE statements only)"
+    },
+    {
+      "name": "list_tables",
+      "description": "List all user tables in the database"
+    },
+    {
+      "name": "describe_table",
+      "description": "Show column schema for a table"
+    }
   ],
   "contributors": [
-    { "handle": "wahyuzero", "role": "original_porter", "version": "1.0.0", "change": "Initial idiomatic Go port on modernc.org/sqlite (CGO-free)" }
+    {
+      "handle": "wahyuzero",
+      "role": "original_porter",
+      "version": "1.0.0",
+      "change": "Initial idiomatic Go port on modernc.org/sqlite (CGO-free)"
+    }
   ],
   "drift": {
     "status": "synchronized",
-    "last_checked": "2026-09-05T00:00:00Z",
+    "last_checked": "2026-09-06T03:31:46Z",
     "upstream_latest_commit": "d73f99efbfd40c3aa1b61e88728b3d49fb52608f"
   }
 }
