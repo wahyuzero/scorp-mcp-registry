@@ -12,7 +12,7 @@
       "tools": [
         "fetch"
       ],
-      "drift": "synchronized",
+      "drift": "outdated",
       "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/servers/fetch/manifest.json",
       "artifacts": {}
     },
@@ -37,7 +37,7 @@
         "get_file_info",
         "list_allowed_directories"
       ],
-      "drift": "synchronized",
+      "drift": "outdated",
       "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/servers/filesystem/manifest.json",
       "artifacts": {}
     },
@@ -56,7 +56,7 @@
         "list_tables",
         "describe_table"
       ],
-      "drift": "synchronized",
+      "drift": "outdated",
       "manifest_url": "https://raw.githubusercontent.com/wahyuzero/scorp-mcp-registry/main/servers/sqlite/manifest.json",
       "artifacts": {}
     }
